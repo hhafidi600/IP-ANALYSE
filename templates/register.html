@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NETKIT — Create account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-body">
+  <div class="auth-card">
+    <div class="brand">
+      <span class="brand-mark">NK</span>
+      <div class="brand-text">
+        <span class="brand-name">NETKIT</span>
+        <span class="brand-sub">network diagnostics</span>
+      </div>
+    </div>
+
+    <h1 class="auth-title">Create account</h1>
+
+    {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
+
+    <form method="post" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>
+        <span>Username</span>
+        <input type="text" name="username" required autofocus minlength="3">
+      </label>
+      <label>
+        <span>Password</span>
+        <input type="password" name="password" required minlength="8">
+      </label>
+      <p class="auth-hint">3+ characters for username, 8+ for password.</p>
+      <button type="submit">Create account</button>
+    </form>
+
+    <p class="auth-switch">Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
+  </div>
+</body>
+</html>

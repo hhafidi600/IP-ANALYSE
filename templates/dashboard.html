@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NETKIT — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">NK</span>
+      <div class="brand-text">
+        <span class="brand-name">NETKIT</span>
+        <span class="brand-sub">{{ username }}</span>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a class="nav-item" href="{{ url_for('index') }}"><span class="nav-index">←</span> Tools</a>
+      <a class="nav-item is-active" href="{{ url_for('dashboard') }}"><span class="nav-index">◆</span> Dashboard</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="{{ url_for('logout') }}" class="logout-link">Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="tool-header">
+      <h1>Dashboard</h1>
+      <p>Your activity across all NETKIT tools.</p>
+    </header>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-value">{{ stats.total }}</span>
+        <span class="stat-label">Total scans</span>
+      </div>
+      {% for t in stats.by_tool[:3] %}
+      <div class="stat-card">
+        <span class="stat-value">{{ t.c }}</span>
+        <span class="stat-label">{{ t.tool }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-card">
+        <h3>Activity — last 14 days</h3>
+        <canvas id="dayChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>By tool</h3>
+        <canvas id="toolChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>Top targets</h3>
+      {% if stats.top_targets %}
+      <div class="terminal">
+        {% for t in stats.top_targets %}
+        <div class="row"><span class="k">{{ t.target }}</span><span class="v">{{ t.c }} scans</span></div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="terminal"><div class="terminal-hint">no scans yet — run a tool to see data here</div></div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+
+<script>
+  const byDay = {{ stats.by_day | tojson }}.reverse();
+  const byTool = {{ stats.by_tool | tojson }};
+
+  new Chart(document.getElementById('dayChart'), {
+    type: 'line',
+    data: {
+      labels: byDay.map(d => d.day.slice(5)),
+      datasets: [{
+        data: byDay.map(d => d.c),
+        borderColor: '#3FC1B0',
+        backgroundColor: 'rgba(63,193,176,0.12)',
+        fill: true, tension: 0.3,
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#7C8AA0' }, grid: { color: '#263141' } },
+        y: { ticks: { color: '#7C8AA0' }, grid: { color: '#263141' }, beginAtZero: true }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('toolChart'), {
+    type: 'doughnut',
+    data: {
+      labels: byTool.map(t => t.tool),
+      datasets: [{
+        data: byTool.map(t => t.c),
+        backgroundColor: ['#3FC1B0', '#F0B429', '#E5636A', '#6C8EEF', '#B98CF2', '#5EC8E8', '#F29E4C'],
+        borderColor: '#16202C', borderWidth: 2,
+      }]
+    },
+    options: {
+      plugins: { legend: { position: 'bottom', labels: { color: '#E7ECF2', font: { family: 'IBM Plex Sans' } } } }
+    }
+  });
+</script>
+</body>
+</html>

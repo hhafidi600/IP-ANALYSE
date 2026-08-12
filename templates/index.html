@@ -1,1 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network & IP Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
 
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">IP</span>
+      <div class="brand-text">
+        <span class="brand-name">ALALYSE</span>
+        <span class="brand-sub">{{ username }}</span>
+      </div>
+    </div>
+
+    <div class="port-strip" id="portStrip" aria-hidden="true">
+      <div class="port-strip-label">PORT LINK</div>
+      <div class="ports"></div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item is-active" data-tool="subnet"><span class="nav-index">01</span> Subnet Calculator</button>
+      <button class="nav-item" data-tool="ipcheck"><span class="nav-index">02</span> IP Classifier</button>
+      <button class="nav-item" data-tool="portscan"><span class="nav-index">03</span> Port Scanner</button>
+      <button class="nav-item" data-tool="pingsweep"><span class="nav-index">04</span> Ping Sweep</button>
+      <button class="nav-item" data-tool="traceroute"><span class="nav-index">05</span> Traceroute</button>
+      <button class="nav-item" data-tool="dnslookup"><span class="nav-index">06</span> DNS Lookup</button>
+      <button class="nav-item" data-tool="whois"><span class="nav-index">07</span> WHOIS</button>
+    </nav>
+
+    <button class="history-toggle" id="historyToggle"><span class="nav-index">⏱</span> History</button>
+    <a class="history-toggle" href="{{ url_for('dashboard') }}"><span class="nav-index">◆</span> Dashboard</a>
+
+    <div class="sidebar-footer">
+      <span class="status-dot"></span> local runtime
+      <a href="{{ url_for('logout') }}" class="logout-link">Sign out</a>
+    </div>
+  </aside>
+
+  <div class="history-drawer" id="historyDrawer">
+    <div class="history-head"><span>RECENT RUNS</span><button id="historyClear">clear</button></div>
+    <div class="history-list" id="historyList"><div class="terminal-hint">loading…</div></div>
+  </div>
+
+  <main class="main">
+
+    <section class="tool is-active" id="tool-subnet">
+      <header class="tool-header">
+        <div class="tool-header-row"><h1>Subnet Calculator</h1><button class="export-btn" data-export="subnet" disabled>Export PDF</button></div>
+        <p>Enter an address with CIDR prefix to derive its network boundaries.</p>
+      </header>
+      <form class="tool-form" id="form-subnet">
+        <label><span>IP / CIDR</span><input type="text" name="cidr" placeholder="192.168.1.10/24" required></label>
+        <button type="submit">Calculate</button>
+      </form>
+      <div class="terminal" id="out-subnet"><div class="terminal-hint">// results will appear here</div></div>
+    </section>
+
+    <section class="tool" id="tool-ipcheck">
+      <header class="tool-header">
+        <div class="tool-header-row"><h1>IP Classifier</h1><button class="export-btn" data-export="ipcheck" disabled>Export PDF</button></div>
+        <p>Check whether an address is private (RFC 1918), loopback, link-local, or public.</p>
+      </header>
+      <form class="tool-form" id="form-ipcheck">
+        <label><span>IP address</span><input type="text" name="ip" placeholder="10.0.0.5" required></label>
+        <button type="submit">Classify</button>
+      </form>
+      <div class="terminal" id="out-ipcheck"><div class="terminal-hint">// results will appear here</div></div>
+    </section>
+
+    <section class="tool" id="tool-portscan">
+      <header class="tool-header">
+        <div class="tool-header-row"><h1>Port Scanner</h1><button class="export-btn" data-export="portscan" disabled>Export PDF</button></div>
+        <p>Scan a host for open TCP ports. Use only on systems you own or have permission to test.</p>
+      </header>
+      <div class="mode-switch" id="scanModeSwitch">
+        <button type="button" class="mode-btn is-active" data-mode="quick">Quick (top 50)</button>
+        <button type="button" class="mode-btn" data-mode="range">Custom range</button>
+      </div>
+      <form class="tool-form" id="form-portscan">
+        <label><span>Target</span><input type="text" name="target" placeholder="127.0.0.1" required></label>
+        <label class="label-narrow range-field" hidden><span>Start</span><input type="number" name="start" value="1" min="1" max="65535"></label>
+        <label class="label-narrow range-field" hidden><span>End</span><input type="number" name="end" value="1024" min="1" max="65535"></label>
+        <button type="submit">Scan</button>
+      </form>
+      <div class="terminal" id="out-portscan"><div class="terminal-hint">// results will appear here</div></div>
+    </section>
+
+    <section class="tool" id="tool-pingsweep">
+      <header class="tool-header">
+        <div class="tool-header-row"><h1>Ping Sweep</h1><button class="export-btn" data-export="pingsweep" disabled>Export PDF</button></div>
+        <p>Discover live hosts across a network range.</p>
+      </header>
+      <form class="tool-form" id="form-pingsweep">
+        <label><span>Network</span><input type="text" name="network" placeholder="192.168.1.0/24" required></label>
+        <button type="submit">Sweep</button>
+      </form>
+      <div class="terminal" id="out-pingsweep"><div class="terminal-hint">// larger ranges take longer</div></div>
+    </section>
+
+    <section class="tool" id="tool-traceroute">
+      <header class="tool-header">
+        <div class="tool-header-row"><h1>Traceroute</h1><button class="export-btn" data-export="traceroute" disabled>Export PDF</button></div>
+        <p>Trace the network path to a host, hop by hop.</p>
+      </header>
+      <form class="tool-form" id="form-traceroute">
+        <label><span>Target</span><input type="text" name="target" placeholder="google.com" required></label>
+        <button type="submit">Trace</button>
+      </form>
+      <div class="terminal" id="out-traceroute"><div class="terminal-hint">// this can take up to ~30s</div></div>
+    </section>
+
+    <section class="tool" id="tool-dnslookup">
+      <header class="tool-header">
+        <div class="tool-header-row"><h1>DNS Lookup</h1><button class="export-btn" data-export="dnslookup" disabled>Export PDF</button></div>
+        <p>Resolve a domain's IPv4/IPv6 addresses and reverse DNS.</p>
+      </header>
+      <form class="tool-form" id="form-dnslookup">
+        <label><span>Domain</span><input type="text" name="domain" placeholder="example.com" required></label>
+        <button type="submit">Resolve</button>
+      </form>
+      <div class="terminal" id="out-dnslookup"><div class="terminal-hint">// results will appear here</div></div>
+    </section>
+
+    <section class="tool" id="tool-whois">
+      <header class="tool-header">
+        <div class="tool-header-row"><h1>WHOIS</h1><button class="export-btn" data-export="whois" disabled>Export PDF</button></div>
+        <p>Look up registration details for a domain.</p>
+      </header>
+      <form class="tool-form" id="form-whois">
+        <label><span>Domain</span><input type="text" name="domain" placeholder="example.com" required></label>
+        <button type="submit">Look up</button>
+      </form>
+      <div class="terminal" id="out-whois"><div class="terminal-hint">// results will appear here</div></div>
+    </section>
+
+  </main>
+</div>
+
+<div id="printArea" class="print-area"></div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
